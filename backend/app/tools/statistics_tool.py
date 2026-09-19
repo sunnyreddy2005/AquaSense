@@ -25,8 +25,7 @@ class StatisticsTool:
     def aggregate_by_time(self, df: pd.DataFrame, timestamp_col: str, consumption_col: str, freq: str) -> pd.DataFrame:
         """Aggregates consumption by a specific time frequency ('D' for daily, 'W' for weekly, 'ME' for monthly)."""
         df_temp = df.copy()
-        if not pd.api.types.is_datetime64_any_dtype(df_temp[timestamp_col]):
-            df_temp[timestamp_col] = pd.to_datetime(df_temp[timestamp_col], errors='coerce')
+        df_temp[timestamp_col] = pd.to_datetime(df_temp[timestamp_col], errors='coerce')
         
         df_temp = df_temp.dropna(subset=[timestamp_col])
         df_temp.set_index(timestamp_col, inplace=True)
@@ -38,8 +37,7 @@ class StatisticsTool:
     def calculate_hourly_profile(self, df: pd.DataFrame, timestamp_col: str, consumption_col: str) -> Dict[int, float]:
         """Calculates the average consumption for each hour of the day."""
         df_temp = df.copy()
-        if not pd.api.types.is_datetime64_any_dtype(df_temp[timestamp_col]):
-            df_temp[timestamp_col] = pd.to_datetime(df_temp[timestamp_col], errors='coerce')
+        df_temp[timestamp_col] = pd.to_datetime(df_temp[timestamp_col], errors='coerce')
         
         df_temp['hour'] = df_temp[timestamp_col].dt.hour
         hourly_avg = df_temp.groupby('hour')[consumption_col].mean().to_dict()
@@ -48,14 +46,13 @@ class StatisticsTool:
     def calculate_weekday_vs_weekend(self, df: pd.DataFrame, timestamp_col: str, consumption_col: str) -> Dict[str, float]:
         """Compares average daily consumption on weekdays vs weekends."""
         df_temp = df.copy()
-        if not pd.api.types.is_datetime64_any_dtype(df_temp[timestamp_col]):
-            df_temp[timestamp_col] = pd.to_datetime(df_temp[timestamp_col], errors='coerce')
+        df_temp[timestamp_col] = pd.to_datetime(df_temp[timestamp_col], errors='coerce')
             
         # First group by date to get daily totals
-        df_temp['date'] = df_temp[timestamp_col].dt.date
+        df_temp['_calendar_date'] = df_temp[timestamp_col].dt.date
         df_temp['is_weekend'] = df_temp[timestamp_col].dt.dayofweek >= 5
         
-        daily_totals = df_temp.groupby(['date', 'is_weekend'])[consumption_col].sum().reset_index()
+        daily_totals = df_temp.groupby(['_calendar_date', 'is_weekend'])[consumption_col].sum().reset_index()
         
         weekday_avg = daily_totals[~daily_totals['is_weekend']][consumption_col].mean()
         weekend_avg = daily_totals[daily_totals['is_weekend']][consumption_col].mean()
